@@ -9,37 +9,63 @@
 import SpriteKit
 
 class GameScene: SKScene {
-    override func didMoveToView(view: SKView) {
-        /* Setup your scene here */
-        let myLabel = SKLabelNode(fontNamed:"Chalkduster")
-        myLabel.text = "Hello, World!"
-        myLabel.fontSize = 45
-        myLabel.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMidY(self.frame))
+    
+    let stackFallRate:CGFloat = 0.5
+    let pieceExitTime: NSTimeInterval = 0.2
+    let startingStackCount: Int = 10
+    
+    var stack = [SKSpriteNode]()
+    var hue: CGFloat = 0
+    
+    func addPiece() {
+        hue += 0.1
+        let color = UIColor(hue: hue % 1, saturation: 1, brightness: 1, alpha: 1)
+        let pieceSize = CGSize(width: 100, height: 40)
+        let piece = SKSpriteNode(color: color, size: pieceSize)
         
-        self.addChild(myLabel)
+        addChild(piece)
+        stack.append(piece)
+        
+        piece.position.x = view!.frame.size.width / 2
+        piece.position.y = CGFloat(stack.count * 40)
+        
+    }
+    
+    
+    func removePiece() {
+        let piece = stack.removeFirst()
+        let movePiece = SKAction.moveToX(-50, duration: pieceExitTime)
+        let removePiece = SKAction.removeFromParent()
+        piece.runAction(SKAction.sequence([movePiece, removePiece]))
+    }
+    
+    
+    override func didMoveToView(view: SKView) {
+        
+        
+        // Make 10 pieces 
+        for _ in 1...startingStackCount {
+            addPiece()
+        }
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-       /* Called when a touch begins */
+        /* Called when a touch begins */
         
-        for touch in touches {
-            let location = touch.locationInNode(self)
-            
-            let sprite = SKSpriteNode(imageNamed:"Spaceship")
-            
-            sprite.xScale = 0.5
-            sprite.yScale = 0.5
-            sprite.position = location
-            
-            let action = SKAction.rotateByAngle(CGFloat(M_PI), duration:1)
-            
-            sprite.runAction(SKAction.repeatActionForever(action))
-            
-            self.addChild(sprite)
-        }
+        removePiece()
+        addPiece()
+        
     }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+        
+        var n: CGFloat = 0
+        for piece in stack {
+            let y = (n * 40) + 40
+            piece.position.y -= (piece.position.y - y) * stackFallRate
+            
+            n += 1
+        }
     }
 }
